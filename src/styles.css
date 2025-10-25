@@ -6,6 +6,40 @@
   font-family: 'Roboto', sans-serif;
 }
 
+/* ------ Toast de Bienvenida (Login) ------ */
+.toast-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.45);
+}
+.toast-box {
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+  background: #0b0b0b; border: 1px solid var(--accent-blue);
+  border-radius: 14px; padding: 20px 24px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  animation: popIn 200ms ease-out;
+}
+.toast-img { width: 96px; height: 96px; }
+.welcome-title {
+  font-family: 'Orbitron', sans-serif;
+  color: var(--accent-green);
+  text-shadow: 0 0 8px rgba(57,255,20,0.6);
+}
+.toast-close{
+  align-self: center;
+  margin-top: 6px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  width: 30px; height: 30px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; line-height: 1;
+  cursor: pointer;
+}
+.toast-close:hover{ background: rgba(255,255,255,0.06); }
+@keyframes popIn{ from{ transform: scale(0.95); opacity: 0; } to{ transform: scale(1); opacity: 1; } }
+
 :root {
   --bg: #000;
   --text: #fff;
@@ -48,9 +82,13 @@ header {
 
 .logo {
   font-family: 'Orbitron', sans-serif;
-  font-size: 1.8rem;
+  font-size: 2.8rem;
+  font-weight: 900;
+  letter-spacing: 1px;
   color: var(--accent-green);
   text-decoration: none;
+  -webkit-text-stroke: 0.6px #0b0b0b; /* mayor grosor visual */
+  text-shadow: 0 0 6px rgba(57,255,20,0.35);
 }
 
 nav ul {
@@ -132,11 +170,7 @@ nav ul li a:hover {
 }
 .btn-secondary:hover { background-color: #2bd411; }
 
-.checkout-btn {
-  width: 100%;
-  padding: 1rem;
-  margin-top: 1rem;
-}
+.checkout-btn { width: 100%; }
 
 /* --------- Blog --------- */
 .blog-section { margin-bottom: 3rem; }
@@ -223,6 +257,8 @@ nav ul li a:hover {
   border-radius: 4px;
 }
 
+.item-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
+
 .item-details { flex-grow: 1; }
 .item-name { font-weight: 500; margin-bottom: 0.3rem; }
 .item-price { color: var(--accent-green); margin-bottom: 0.5rem; }
@@ -230,28 +266,40 @@ nav ul li a:hover {
 .item-quantity {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
 }
 
 .quantity-btn {
   background-color: #333;
-  color: var(--text);
-  border: none;
-  width: 25px;
-  height: 25px;
-  border-radius: 4px;
+  border: 1px solid #444;
+  color: #D3D3D3;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
   cursor: pointer;
 }
+.quantity-btn:hover { background-color: #3a3a3a; }
 
 .quantity-input {
-  width: 40px;
+  width: 56px;
+  height: 32px;
   text-align: center;
-  margin: 0 0.5rem;
+  margin: 0;
   background-color: var(--bg);
   color: var(--text);
   border: 1px solid #333;
-  border-radius: 4px;
-  padding: 0.2rem;
+  border-radius: 6px;
+  padding: 0 6px;
 }
+
+/* Oculta flechas de los inputs numéricos en distintos navegadores */
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.quantity-input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 
 .remove-item {
   background: none;
@@ -417,8 +465,22 @@ footer {
     .filters button:not(.active){background:#222;color:#fff;}
 
     /* Grid de productos */
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.2rem;}
-    .card{background:#111;border-radius:8px;padding:1rem;text-align:center;transition:transform 0.3s;}
+    .grid{
+        display:grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 320px));
+        gap:1.2rem;
+        justify-content: center;    /* centra el conjunto de columnas */
+        justify-items: center;      /* centra cada tarjeta en su celda */
+    }
+    .card{
+        background:#111;
+        border-radius:8px;
+        padding:1rem;
+        text-align:center;
+        transition:transform 0.3s;
+        width:100%;
+        max-width:320px;            /* evita que se estire y mantiene tamaño consistente */
+    }
     .card:hover{transform:translateY(-5px);}
     .card img{width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:1rem;background:#222;}
     .card h3{color:#1E90FF;margin-bottom:0.5rem;}
@@ -757,11 +819,7 @@ nav ul li a:hover {
     margin: 1rem 0;
 }
 
-.checkout-btn {
-    width: 100%;
-    padding: 1rem;
-    margin-top: 1rem;
-}
+.checkout-btn { width: 100%; }
 
 footer {
     text-align: center;
@@ -769,6 +827,34 @@ footer {
     margin-top: 2rem;
     border-top: 1px solid #333;
     color: #D3D3D3;
+}
+
+/* Estilo específico para el botón 'Seguir comprando' dentro del carrito */
+.cart-summary .btn.btn-secondary { color: #fff; }
+.cart-summary .btn.btn-secondary:hover { color: #fff; }
+
+/* ------ Estrellas (rating) ------ */
+.stars { display:inline-flex; align-items:center; gap:6px; cursor:pointer; }
+.stars.small { cursor:default; gap:4px; }
+.star { color:#444; font-size:18px; line-height:1; }
+.stars.small .star { font-size:14px; }
+.star.filled { color:#FFD700; }
+.stars-meta { color:#D3D3D3; font-size:0.9rem; margin-left:4px; }
+
+/* ------ Modal reseñas ------ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.35);
+}
+.modal-content {
+  width: min(720px, 92%);
+  background: #111;
+  border: 1px solid #1E90FF;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
 }
 
 /* Responsive */

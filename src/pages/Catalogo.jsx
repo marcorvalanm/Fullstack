@@ -26,8 +26,14 @@ export default function Catalogo(){
     try{
       const key = "levelup_cart";
       const cart = JSON.parse(localStorage.getItem(key) || "[]");
-      cart.push({ id:product.id, product:product.title, price:product.price, category:product.category, qty:1 });
+      const idx = cart.findIndex(i => i.id === product.id);
+      if(idx >= 0){
+        cart[idx].qty = (cart[idx].qty || 1) + 1;
+      } else {
+        cart.push({ id:product.id, product:product.title, price:product.price, category:product.category, qty:1, img: product.img });
+      }
       localStorage.setItem(key, JSON.stringify(cart));
+      window.dispatchEvent(new Event("levelup_cart_updated"));
       alert(`${product.title} agregado al carrito ✅`);
     }catch{}
   }
