@@ -8,6 +8,19 @@ export default function Carrito(){
   const { session } = useSession();
   const isDuoc = !!(session?.email && session.email.toLowerCase().endsWith("@duocuc.cl"));
 
+  function loadUsers(){ try{ return JSON.parse(localStorage.getItem("levelup_users")||"[]"); }catch{ return []; } }
+  function saveUsers(list){ try{ localStorage.setItem("levelup_users", JSON.stringify(list)); }catch{} }
+  function computeLevel(points){
+    if(points >= 1000) return 3; // 10%
+    if(points >= 500) return 2;  // 5%
+    return 1;                     // 0%
+  }
+  function getUser(){
+    if(!session?.email) return null;
+    const users = loadUsers();
+    return users.find(u=>u.email===session.email) || null;
+  }
+
   useEffect(()=>{
     const key = "levelup_cart";
     const stored = JSON.parse(localStorage.getItem(key) || "[]");
@@ -83,16 +96,40 @@ export default function Carrito(){
     setItems(prev=> prev.filter((_,i)=>i!==index));
   }
 
-  const { subtotal, discount, total } = useMemo(()=>{
+  const { subtotal, duocDiscount, levelDiscount, applied, total } = useMemo(()=>{
     const st = items.reduce((acc,i)=>{
       const q = parseInt(i.quantity,10);
       const qty = isNaN(q) ? 0 : q;
       return acc + i.price * qty;
     }, 0);
-    const dc = isDuoc ? Math.round(st * 0.20) : 0;
-    const tt = Math.max(0, st - dc);
-    return { subtotal: st, discount: dc, total: tt };
-  },[items, isDuoc]);
+    // Descuento por nivel (5% nivel 2, 10% nivel 3)
+    let lvlPct = 0;
+    const u = getUser();
+    const lvl = u?.level || computeLevel(u?.points||0);
+    if(lvl >= 3) lvlPct = 0.10; else if(lvl >= 2) lvlPct = 0.05;
+    const lvlDc = Math.round(st * lvlPct);
+    // Descuento DUOC 20%
+    const duocDc = isDuoc ? Math.round(st * 0.20) : 0;
+    // No acumulables: aplica el mayor
+    const appliedKind = duocDc >= lvlDc ? 'duoc' : 'level';
+    const effective = appliedKind === 'duoc' ? duocDc : lvlDc;
+    const tt = Math.max(0, st - effective);
+    return { subtotal: st, duocDiscount: duocDc, levelDiscount: lvlDc, applied: appliedKind, total: tt };
+  },[items, isDuoc, session]);
+
+  function awardPointsOnCheckout(amountPaid){
+    if(!session?.email) return;
+    const users = loadUsers();
+    const idx = users.findIndex(u=>u.email===session.email);
+    if(idx<0) return;
+    const earn = Math.max(0, Math.floor(amountPaid / 1000)); // 1 punto por cada $1000
+    const prevPts = Number(users[idx].points||0);
+    const newPts = prevPts + earn;
+    const newLvl = computeLevel(newPts);
+    users[idx] = { ...users[idx], points: newPts, level: newLvl };
+    saveUsers(users);
+    return { earn, newPts, newLvl };
+  }
 
   return (
     <div className="container">
@@ -143,16 +180,27 @@ export default function Carrito(){
             <span id="subtotal">{formatCLP(subtotal)} CLP</span>
           </div>
           <div className="summary-row">
-            <span>Descuento{isDuoc?" (DUOC 20%)":""}:</span>
-            <span id="discount">-{formatCLP(discount)} CLP</span>
+            <span>Descuento Nivel
+              {(()=>{ const u=getUser(); const l=u?.level||computeLevel(u?.points||0); return l>=3?" (10%)": l>=2?" (5%)":" (0%)"; })()}
+              {applied==='duoc'?" (no acumulable)":""}:</span>
+            <span id="discount-level">-{formatCLP(applied==='level'?levelDiscount:0)} CLP</span>
           </div>
+          <div className="summary-row">
+            <span>Descuento {isDuoc?"DUOC 20%":"DUOC"}{applied==='level'?" (no acumulable)":""}:</span>
+            <span id="discount-duoc">-{formatCLP(applied==='duoc'?duocDiscount:0)} CLP</span>
+          </div>
+          <div className="hint" style={{marginTop:4}}>Descuentos LevelUp y DUOC no son acumulables; se aplica el mayor.</div>
           <div className="summary-row summary-total">
             <span>Total:</span>
             <span id="total">{formatCLP(total)} CLP</span>
           </div>
           <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem'}}>
             <Link to="/catalogo" className="btn btn-secondary">Seguir comprando</Link>
-            <button className="btn btn-primary checkout-btn" id="checkout-btn" onClick={()=>alert('¡Gracias por tu compra!')}>Proceder al Pago</button>
+            <button className="btn btn-primary checkout-btn" id="checkout-btn" onClick={()=>{
+              const res = awardPointsOnCheckout(total);
+              if(res){ alert(`¡Gracias por tu compra! +${res.earn} pts LevelUp. Total puntos: ${res.newPts}. Nivel: ${res.newLvl}`); }
+              else { alert('¡Gracias por tu compra!'); }
+            }}>Proceder al Pago</button>
           </div>
         </div>
       </section>
