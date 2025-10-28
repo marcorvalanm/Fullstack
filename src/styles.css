@@ -1049,6 +1049,61 @@ max-width: 1200px;
 .login-page .error { color: #ff6b6b; }
 .login-page .success { color: var(--accent-green); }
 
+/* Contenedor de campo con icono (contraseña) */
+.login-page .field-wrap{
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.login-page .field-wrap input{
+  padding-right: 44px; /* espacio para el botón-ícono */
+}
+.login-page .field-wrap .field-icon{
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 22px; height: 22px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  display: flex; align-items:center; justify-content:center;
+  font-size: 16px; line-height: 1;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+  transform: translateY(calc(-50% - 5px));
+  cursor: pointer;
+}
+.login-page .field-wrap .field-icon.neon{
+  border-color: rgba(57,255,20,0.55);
+  color: var(--accent-green);
+  text-shadow: 0 0 6px rgba(57,255,20,0.6);
+  box-shadow: 0 0 6px rgba(57,255,20,0.35);
+}
+.login-page .field-wrap .field-icon.neon:hover{
+  background: rgba(57,255,20,0.12);
+}
+
+/* Botón fantasma en versión neón ("Ya tengo cuenta") */
+.login-page button.ghost.neon{
+  background: var(--accent-green);
+  color: #000;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 6px rgba(57,255,20,0.35);
+}
+.login-page button.ghost.neon:hover{
+  background: #5CFF41;
+}
+
+/* Date input - icono calendario con estilo neutro (blanco) */
+.login-page input[type="date"]::-webkit-calendar-picker-indicator{
+  filter: invert(1) brightness(1.4);
+  cursor: pointer;
+}
+.login-page input[type="date"]:hover::-webkit-calendar-picker-indicator{
+  filter: invert(1) brightness(1.6);
+}
+
 /* SOLO PARA LA PÁGINA DE PERFIL */
 .profile-page {
   margin: 0;

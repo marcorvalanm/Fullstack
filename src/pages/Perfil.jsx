@@ -11,6 +11,13 @@ function saveUsers(list){
   try{ localStorage.setItem(DB_KEY, JSON.stringify(list)); }catch{}
 }
 
+function computeLevel(points){
+  const pts = Number(points||0);
+  if(pts >= 1000) return 3;
+  if(pts >= 500) return 2;
+  return 1;
+}
+
 export default function Perfil(){
   const { session, logout } = useSession();
   const navigate = useNavigate();
@@ -43,6 +50,12 @@ export default function Perfil(){
       return <span className="success">Descuento activo: 20% (correo Duoc)</span>;
     }
     return <span className="hint">Sin beneficios especiales.</span>;
+  },[user]);
+
+  const levelInfo = useMemo(()=>{
+    const pts = Number(user?.points||0);
+    const lvl = user?.level || computeLevel(pts);
+    return { lvl, pts };
   },[user]);
 
   function onSaveProfile(e){
@@ -85,7 +98,7 @@ export default function Perfil(){
         <div className="card">
           <h2>Información Personal</h2>
           <form onSubmit={onSaveProfile} id="form-profile">
-            <label htmlFor="p-name">Nombre</label>
+            <label htmlFor="p-name">Nombre <span style={{marginLeft:8, fontSize:12, padding:'2px 8px', borderRadius:999, background:'rgba(57,255,20,0.12)', border:'1px solid rgba(57,255,20,0.45)'}} title={`Puntos: ${levelInfo.pts}`}>Nivel {levelInfo.lvl}</span></label>
             <input id="p-name" type="text" value={name} onChange={e=>setName(e.target.value)} />
 
             <label htmlFor="p-email">Correo</label>
