@@ -35,6 +35,9 @@ export default function Header() {
           <li><Link to="/blog">Blog</Link></li>
           <li><Link to="/eventos">Eventos</Link></li>
           <li><Link to="/soporte">Soporte</Link></li>
+          {session?.user?.role === 'ADMIN' && (
+            <li><Link to="/products" className="admin-link">Admin Productos</Link></li>
+          )}
         </ul>
       </nav>
       <div className="user-actions">
