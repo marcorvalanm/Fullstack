@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PRODUCTS } from "../data/products";
+import { addToCart as addToCartAPI } from "../services/cartService";
 
 const CATEGORIES = [
   { key:"all", label:"Todos" },
@@ -35,20 +36,21 @@ export default function Catalogo(){
     return list;
   },[category, search, minPrice, maxPrice]);
 
-  function addToCart(product){
+  async function addToCart(product){
     try{
-      const key = "levelup_cart";
-      const cart = JSON.parse(localStorage.getItem(key) || "[]");
-      const idx = cart.findIndex(i => i.id === product.id);
-      if(idx >= 0){
-        cart[idx].qty = (cart[idx].qty || 1) + 1;
-      } else {
-        cart.push({ id:product.id, product:product.title, price:product.price, category:product.category, qty:1, img: product.img });
-      }
-      localStorage.setItem(key, JSON.stringify(cart));
+      await addToCartAPI(
+        product.id.toString(),
+        product.title,
+        product.price,
+        1,
+        product.img
+      );
       window.dispatchEvent(new Event("levelup_cart_updated"));
       alert(`${product.title} agregado al carrito ✅`);
-    }catch{}
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Error al agregar al carrito. Por favor intenta nuevamente.');
+    }
   }
 
   return (

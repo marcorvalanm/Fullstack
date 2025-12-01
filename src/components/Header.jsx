@@ -1,30 +1,36 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useSession } from "../context/SessionContext";
+import { getCartItems } from "../services/cartService";
 
 export default function Header() {
   const { session, logout } = useSession();
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    function readCount() {
+    async function readCount() {
+      if (!session) {
+        setCartCount(0);
+        return;
+      }
+      
       try {
-        const key = "levelup_cart";
-        const cart = JSON.parse(localStorage.getItem(key) || "[]");
-        setCartCount(Array.isArray(cart) ? cart.reduce((a, i) => a + (i.qty || 1), 0) : 0);
-      } catch {
+        const cartItems = await getCartItems();
+        const count = Array.isArray(cartItems) ? cartItems.reduce((a, i) => a + (i.quantity || 1), 0) : 0;
+        setCartCount(count);
+      } catch (error) {
+        console.error('Error reading cart count:', error);
         setCartCount(0);
       }
     }
+    
     readCount();
     const onUpdate = () => readCount();
-    window.addEventListener("storage", onUpdate);
     window.addEventListener("levelup_cart_updated", onUpdate);
     return () => {
-      window.removeEventListener("storage", onUpdate);
       window.removeEventListener("levelup_cart_updated", onUpdate);
     };
-  }, []);
+  }, [session]);
   return (
     <header>
       <Link to="/" className="logo">LEVEL-UP GAMER</Link>
@@ -35,6 +41,9 @@ export default function Header() {
           <li><Link to="/blog">Blog</Link></li>
           <li><Link to="/eventos">Eventos</Link></li>
           <li><Link to="/soporte">Soporte</Link></li>
+          {session?.user?.role === 'ADMIN' && (
+            <li><Link to="/products" className="admin-link">Admin Productos</Link></li>
+          )}
         </ul>
       </nav>
       <div className="user-actions">

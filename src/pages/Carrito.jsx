@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSession } from "../context/SessionContext";
+import { getCartItems, addToCart, updateCartItemQuantity, removeFromCart, clearCart } from "../services/cartService";
+import { checkout } from "../services/orderService";
 
 export default function Carrito(){
   const [items, setItems] = useState([]);
@@ -22,32 +24,25 @@ export default function Carrito(){
   }
 
   useEffect(()=>{
-    const key = "levelup_cart";
-    const stored = JSON.parse(localStorage.getItem(key) || "[]");
-    if(stored.length){
-      const normalized = stored.map((i,idx)=>({ id:i.id || idx+1, name:i.product, price:i.price, quantity:i.qty||1, image:i.img || i.image || "" }));
-      setItems(normalized);
-    } else {
-      setItems([]);
-    }
-    setLoaded(true);
+    loadCartFromAPI();
   },[]);
 
-  useEffect(()=>{
-    if(!loaded) return; // evita borrar el carrito en el primer render con StrictMode
-    const key = "levelup_cart";
-    const toSave = items.map(i=>({ id:i.id, product:i.name, price:i.price, category:"", qty:i.quantity }));
-    localStorage.setItem(key, JSON.stringify(toSave));
-    try{ window.dispatchEvent(new Event("levelup_cart_updated")); }catch{}
-  },[items, loaded]);
 
-  function changeQuantity(index, delta){
-    setItems(prev=>{
-      const next=[...prev];
-      const current = Number(next[index].quantity) || 1;
-      next[index].quantity = Math.max(1, current + delta);
-      return next;
-    });
+  async function changeQuantity(index, delta){
+    try {
+      const item = items[index];
+      const newQuantity = Math.max(1, item.quantity + delta);
+      
+      await updateCartItemQuantity(item.productId, newQuantity);
+      
+      setItems(prev=>{
+        const next=[...prev];
+        next[index].quantity = newQuantity;
+        return next;
+      });
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+    }
   }
 
   // Evita repetición por mantener presionado o dobles eventos muy seguidos
@@ -70,30 +65,59 @@ export default function Carrito(){
     safeChangeQuantity(index, delta);
   }
 
-  function onQuantityChange(index, value){
-    setItems(prev=>{
-      const next=[...prev];
-      if(value === ""){
-        next[index].quantity = ""; // permite borrar para tipear
-      } else {
-        const q = parseInt(value,10);
-        next[index].quantity = isNaN(q) ? 1 : Math.max(1, q);
+  async function onQuantityChange(index, value){
+    if(value === ""){
+      setItems(prev=>{
+        const next=[...prev];
+        next[index].quantity = "";
+        return next;
+      });
+    } else {
+      const q = parseInt(value,10);
+      const newQuantity = isNaN(q) ? 1 : Math.max(1, q);
+      
+      try {
+        const item = items[index];
+        await updateCartItemQuantity(item.productId, newQuantity);
+        
+        setItems(prev=>{
+          const next=[...prev];
+          next[index].quantity = newQuantity;
+          return next;
+        });
+      } catch (error) {
+        console.error('Error updating quantity:', error);
       }
-      return next;
-    });
+    }
   }
 
-  function onQuantityBlur(index){
-    setItems(prev=>{
-      const next=[...prev];
-      const q = parseInt(next[index].quantity,10);
-      next[index].quantity = isNaN(q) || q < 1 ? 1 : q;
-      return next;
-    });
+  async function onQuantityBlur(index){
+    const q = parseInt(items[index].quantity,10);
+    const finalQuantity = isNaN(q) || q < 1 ? 1 : q;
+    
+    try {
+      const item = items[index];
+      await updateCartItemQuantity(item.productId, finalQuantity);
+      
+      setItems(prev=>{
+        const next=[...prev];
+        next[index].quantity = finalQuantity;
+        return next;
+      });
+    } catch (error) {
+      console.error('Error updating quantity on blur:', error);
+    }
   }
 
-  function removeItem(index){
-    setItems(prev=> prev.filter((_,i)=>i!==index));
+  async function removeItem(index){
+    try {
+      const item = items[index];
+      await removeFromCart(item.productId);
+      
+      setItems(prev=> prev.filter((_,i)=>i!==index));
+    } catch (error) {
+      console.error('Error removing item:', error);
+    }
   }
 
   const { subtotal, duocDiscount, levelDiscount, applied, total } = useMemo(()=>{
@@ -117,19 +141,25 @@ export default function Carrito(){
     return { subtotal: st, duocDiscount: duocDc, levelDiscount: lvlDc, applied: appliedKind, total: tt };
   },[items, isDuoc, session]);
 
-  function awardPointsOnCheckout(amountPaid){
-    if(!session?.email) return;
-    const users = loadUsers();
-    const idx = users.findIndex(u=>u.email===session.email);
-    if(idx<0) return;
-    const earn = Math.max(0, Math.floor(amountPaid / 1000)); // 1 punto por cada $1000
-    const prevPts = Number(users[idx].points||0);
-    const newPts = prevPts + earn;
-    const newLvl = computeLevel(newPts);
-    users[idx] = { ...users[idx], points: newPts, level: newLvl };
-    saveUsers(users);
-    return { earn, newPts, newLvl };
-  }
+  const loadCartFromAPI = async () => {
+    try {
+      const cartItems = await getCartItems();
+      const normalized = cartItems.map(item => ({
+        id: item.id,
+        name: item.productName,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.productImage,
+        productId: item.productId
+      }));
+      setItems(normalized);
+    } catch (error) {
+      console.error('Error loading cart from API:', error);
+      setItems([]);
+    } finally {
+      setLoaded(true);
+    }
+  };
 
   return (
     <div className="container">
@@ -196,10 +226,15 @@ export default function Carrito(){
           </div>
           <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.5rem'}}>
             <Link to="/catalogo" className="btn btn-secondary">Seguir comprando</Link>
-            <button className="btn btn-primary checkout-btn" id="checkout-btn" onClick={()=>{
-              const res = awardPointsOnCheckout(total);
-              if(res){ alert(`¡Gracias por tu compra! +${res.earn} pts LevelUp. Total puntos: ${res.newPts}. Nivel: ${res.newLvl}`); }
-              else { alert('¡Gracias por tu compra!'); }
+            <button className="btn btn-primary checkout-btn" id="checkout-btn" onClick={async ()=>{
+              try {
+                const order = await checkout(subtotal, total, duocDiscount, levelDiscount, applied);
+                alert('¡Pedido creado exitosamente! ID: ' + order.id);
+                await loadCartFromAPI(); // Recargar carrito vacío
+              } catch (error) {
+                console.error('Error during checkout:', error);
+                alert('Error al procesar el pedido. Por favor intenta nuevamente.');
+              }
             }}>Proceder al Pago</button>
           </div>
         </div>

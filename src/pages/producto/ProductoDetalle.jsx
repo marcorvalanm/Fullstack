@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getProduct } from "../../data/products";
+import { addToCart as addToCartAPI } from "../../services/cartService";
 
 function formatCLP(v){ return `$${(v||0).toLocaleString('es-CL')}`; }
 const AVATAR_FALLBACK = "/img/avatar_placeholder.svg";
@@ -50,20 +51,21 @@ export default function ProductoDetalle(){
     return { avg, count: list.length };
   },[p]);
 
-  function addToCart(){
+  async function addToCart(){
     try{
-      const key = "levelup_cart";
-      const cart = JSON.parse(localStorage.getItem(key) || "[]");
-      const idx = cart.findIndex(i => i.id === p.id);
-      if(idx >= 0){
-        cart[idx].qty = (cart[idx].qty || 1) + 1;
-      } else {
-        cart.push({ id:p.id, product:p.title, price:p.price, category:p.category, qty:1, img:p.img });
-      }
-      localStorage.setItem(key, JSON.stringify(cart));
+      await addToCartAPI(
+        p.id.toString(),
+        p.title,
+        p.price,
+        1,
+        p.img
+      );
       try{ window.dispatchEvent(new Event("levelup_cart_updated")); }catch{}
       alert(`${p.title} agregado al carrito ✅`);
-    }catch{}
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Error al agregar al carrito. Por favor intenta nuevamente.');
+    }
   }
 
   return (
