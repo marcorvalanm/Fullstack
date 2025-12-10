@@ -1,0 +1,7 @@
+com\example\backend\BackendApplication.class
+com\example\backend\config\CorsConfig.class
+com\example\backend\model\Product.class
+com\example\backend\model\User.class
+com\example\backend\repository\ProductRepository.class
+com\example\backend\controller\ProductController.class
+com\example\backend\service\ProductService.class

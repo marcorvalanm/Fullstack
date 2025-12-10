@@ -1,0 +1,13 @@
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\BackendApplication.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\config\CorsConfig.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\config\DataSeeder.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\config\SecurityConfig.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\controller\AuthController.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\controller\ProductController.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\model\Product.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\model\User.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\repository\ProductRepository.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\repository\UserRepository.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\security\JwtAuthenticationFilter.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\service\ProductService.java
+C:\Users\xinot\OneDrive\Escritorio\Fullstack-main2\backend\src\main\java\com\example\backend\util\JwtUtil.java
