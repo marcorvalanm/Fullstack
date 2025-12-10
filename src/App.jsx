@@ -1,38 +1,32 @@
-import { Routes, Route } from 'react-router-dom'
-import { SessionProvider } from './context/SessionContext'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import Home from './pages/Home'
-import Catalogo from './pages/Catalogo'
-import Carrito from './pages/Carrito'
-import Blog from './pages/Blog'
-import Eventos from './pages/Eventos'
-import Soporte from './pages/Soporte'
-import Perfil from './pages/Perfil'
-import Login from './pages/Login'
-import ProductoDetalle from './pages/producto/ProductoDetalle'
+import { Routes, Route, Link } from 'react-router-dom';
+
+const Home = () => {
+  return (
+    <div>
+      <h1>Página de Inicio</h1>
+      <p>Bienvenido a mi proyecto Fullstack.</p>
+    </div>
+  );
+};
+
+const About = () => {
+  return <h1>Acerca de nosotros</h1>;
+};
 
 function App() {
   return (
-    <SessionProvider>
-      <div className="container">
-        <Header />
-      </div>
+    <div className="App">
+      <nav style={{ padding: '10px', borderBottom: '1px solid #ccc', marginBottom: '20px' }}>
+        <Link to="/" style={{ marginRight: '10px' }}>Inicio</Link>
+        <Link to="/about">About</Link>
+      </nav>
+      
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/catalogo" element={<Catalogo />} />
-        <Route path="/carrito" element={<Carrito />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/eventos" element={<Eventos />} />
-        <Route path="/soporte" element={<Soporte />} />
-        <Route path="/perfil" element={<Perfil />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/producto/:slug" element={<ProductoDetalle />} />
+        <Route path="/about" element={<About />} />
+        <Route path="*" element={<h2>404 - Página no encontrada</h2>} />
       </Routes>
-      <div className="container">
-        <Footer />
-      </div>
-    </SessionProvider>
+    </div>
   )
 }
 
